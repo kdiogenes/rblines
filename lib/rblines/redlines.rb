@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'strscan'
-require 'diff/lcs'
+require "strscan"
+require "diff/lcs"
 
 # This regular expression matches a group of characters that can include any character except for parentheses
 # and whitespace characters (which include spaces, tabs, and line breaks) or any character
@@ -40,8 +40,8 @@ end
 # @return [Array<String>] a list of paragraphs
 def split_paragraphs(text)
   text.split(PARAGRAPH_PATTERN)
-      .map(&:strip)
-      .reject(&:empty?)
+    .map(&:strip)
+    .reject(&:empty?)
 end
 
 # Split paragraphs and concatenate them. Then add a character '¶' between paragraphs.
@@ -51,7 +51,7 @@ end
 # @param text [String] the text to split
 # @return [String] a string with paragraphs separated by '¶'
 def concatenate_paragraphs_and_add_chr182(text)
-  split_paragraphs(text).join(' ¶ ')
+  split_paragraphs(text).join(" ¶ ")
 end
 
 module Rblines
@@ -63,10 +63,10 @@ module Rblines
   #   result = redlines.output_markdown
   class Redlines
     MD_STYLES = {
-      'none' => { 'ins' => %w[ins ins], 'del' => %w[del del] },
-      'red' => {
-        'ins' => ['span style="color:red;font-weight:700;"', 'span'],
-        'del' => ['span style="color:red;font-weight:700;text-decoration:line-through;"', 'span']
+      "none" => {"ins" => %w[ins ins], "del" => %w[del del]},
+      "red" => {
+        "ins" => ['span style="color:red;font-weight:700;"', "span"],
+        "del" => ['span style="color:red;font-weight:700;text-decoration:line-through;"', "span"]
       }
     }.freeze
 
@@ -90,26 +90,26 @@ module Rblines
     end
 
     def opcodes
-      raise 'No test string was provided when the function was called, or during initialisation.' if @seq2.nil?
+      raise "No test string was provided when the function was called, or during initialisation." if @seq2.nil?
 
       Diff::LCS.sdiff(@seq1, @seq2)
     end
 
     def output_markdown
       result = []
-      style = MD_STYLES[options[:markdown_style] || 'red']
+      style = MD_STYLES[options[:markdown_style] || "red"]
       grouped_opcodes = opcodes.chunk_while { |a, b| a.action == b.action }.to_a
 
       grouped_opcodes.each do |group|
         group_action = group[0].action
         case group_action
-        when '='
+        when "="
           handle_equal_action(result, group)
-        when '+'
+        when "+"
           handle_add_action(result, group, style)
-        when '-'
+        when "-"
           handle_delete_action(result, group, style)
-        when '!'
+        when "!"
           handle_replace_action(result, group, style)
         end
       end
@@ -118,33 +118,33 @@ module Rblines
     end
 
     def handle_equal_action(result, group)
-      result.push(group.map(&:old_element).join.gsub('¶ ', "\n\n"))
+      result.push(group.map(&:old_element).join.gsub("¶ ", "\n\n"))
     end
 
     def handle_add_action(result, group, md_styles)
-      temp_str = group.map(&:new_element).join.split('¶ ')
-      temp_str.each { |split| result.push("<#{md_styles['ins'][0]}>#{split}</#{md_styles['ins'][1]}>", "\n\n") }
+      temp_str = group.map(&:new_element).join.split("¶ ")
+      temp_str.each { |split| result.push("<#{md_styles["ins"][0]}>#{split}</#{md_styles["ins"][1]}>", "\n\n") }
       result.pop if temp_str.length.positive?
     end
 
     def handle_delete_action(result, group, md_styles)
-      result.push("<#{md_styles['del'][0]}>#{group.map(&:old_element).join}</#{md_styles['del'][1]}>")
+      result.push("<#{md_styles["del"][0]}>#{group.map(&:old_element).join}</#{md_styles["del"][1]}>")
     end
 
     def handle_replace_action(result, group, md_styles)
-      result.push("<#{md_styles['del'][0]}>#{group.map(&:old_element).join}</#{md_styles['del'][1]}>")
-      temp_str = group.map(&:new_element).join.split('¶ ')
-      temp_str.each { |split| result.push("<#{md_styles['ins'][0]}>#{split}</#{md_styles['ins'][1]}>", "\n\n") }
+      result.push("<#{md_styles["del"][0]}>#{group.map(&:old_element).join}</#{md_styles["del"][1]}>")
+      temp_str = group.map(&:new_element).join.split("¶ ")
+      temp_str.each { |split| result.push("<#{md_styles["ins"][0]}>#{split}</#{md_styles["ins"][1]}>", "\n\n") }
       result.pop if temp_str.length.positive?
     end
 
-    def compare(test = nil, output = 'markdown', options = {})
+    def compare(test = nil, output = "markdown", options = {})
       self.test = test if test
-      raise 'No test string was provided when the function was called, or during initialisation.' if self.test.nil?
+      raise "No test string was provided when the function was called, or during initialisation." if self.test.nil?
 
       self.options.merge!(options)
 
-      return unless output == 'markdown'
+      return unless output == "markdown"
 
       output_markdown
     end
